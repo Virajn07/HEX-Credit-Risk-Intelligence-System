@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>HEX-Credit Loan Analysis</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+
+<body data-credit-score="{{ loan.credit_score | int }}">
+
+<div class="container">
+
+<header class="header">
+
+<h1>HEX-Credit</h1>
+
+<nav>
+<a href="/">Dashboard</a>
+<a href="/applications">Applications</a>
+<a href="/customers">Customers</a>
+</nav>
+
+</header>
+
+
+<h2>Loan Application Review</h2>
+
+
+<!-- ================= PROFILE + SCORE ================= -->
+
+<div class="analysis-grid">
+
+
+<div class="panel">
+
+<h3>Customer Profile</h3>
+
+<p><b>Name:</b>
+<a href="/customer/{{ loan.customer_id }}">
+{{ loan.customer_name }}
+</a>
+</p>
+
+<p><b>CIBIL Score:</b> {{ loan.credit_score }}</p>
+
+<p><b>Annual Income:</b> ₹{{ "{:,.0f}".format(loan.annual_income) }}</p>
+
+<p><b>Loan Amount:</b> ₹{{ "{:,.0f}".format(loan.loan_amount) }}</p>
+
+<p><b>Account Balance:</b> ₹{{ "{:,.0f}".format(loan.account_balance) }}</p>
+
+<p><b>Existing EMI:</b> ₹{{ "{:,.0f}".format(loan.existing_emi) }}</p>
+
+<p><b>Investment Value:</b> ₹{{ "{:,.0f}".format(loan.investment_value) }}</p>
+
+<p><b>Relationship Years:</b> {{ loan.relationship_years }}</p>
+
+<p><b>Total Applications:</b> {{ loan.customer_total_apps }}</p>
+
+<p><b>Status:</b> {{ loan.status }}</p>
+
+</div>
+
+
+<div class="panel">
+
+<h3>CIBIL Credit Score</h3>
+
+<div style="max-width:320px;margin:auto;height:200px;">
+<canvas id="creditScoreChart"></canvas>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================= RISK ================= -->
+
+<div class="panel">
+
+<h3>Risk Prediction</h3>
+
+<p class="{{ risk|lower }}-text">
+<strong>{{ risk }} Risk</strong>
+</p>
+
+<p>{{ probability }}% probability of default</p>
+
+</div>
+
+
+<!-- ================= SHAP ================= -->
+
+{% if shap_values %}
+
+<div class="panel">
+
+<h3>Model Explainability (Feature Impact)</h3>
+
+<div style="max-width:650px;margin:auto;height:350px;">
+<canvas id="shapChart"></canvas>
+</div>
+
+</div>
+
+{% endif %}
+
+
+<!-- ================= AI ANALYSIS ================= -->
+
+<div class="panel">
+
+<h3>AI Credit Analyst Explanation</h3>
+
+<div class="ai-analysis">
+
+<ul>
+{% for line in llm_explanation.split('\n') %}
+<li>{{ line }}</li>
+{% endfor %}
+</ul>
+
+</div>
+
+</div>
+
+
+<!-- ================= COUNTERFACTUALS ================= -->
+
+{% if counterfactuals %}
+
+<div class="panel">
+
+<h3>Loan Restructuring Recommendation</h3>
+
+<ul class="suggestion-list">
+
+{% for suggestion in counterfactuals %}
+<li>{{ suggestion }}</li>
+{% endfor %}
+
+</ul>
+
+</div>
+
+{% endif %}
+
+</div>
+
+
+<!-- ================= DECISION BUTTONS ================= -->
+<div class="decision-container">
+
+<div class="decision-buttons">
+
+<a href="/approve/{{ loan.loan_id }}" class="approve">
+Approve Loan
+</a>
+
+<a href="/hold/{{ loan.loan_id }}" class="hold">
+Put On Hold
+</a>
+
+<a href="/reject/{{ loan.loan_id }}" class="reject">
+Reject Loan
+</a>
+
+<a href="/loan_report/{{ loan.loan_id }}" class="btn btn-analyze">
+Download Report
+</a>
+
+</div>
+
+</div>
+
+
+<!-- ================= SCRIPTS ================= -->
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+/* ================= CIBIL SCORE ================= */
+
+const rawScore = document.body.dataset.creditScore
+
+if(rawScore){
+
+const score = parseInt(rawScore)
+
+if(!isNaN(score)){
+renderCreditScore(score)
+}
+
+}
+
+
+/* ================= SHAP CHART ================= */
+
+const shapData = {{ shap_values | tojson | safe }}
+
+if(shapData && shapData.length){
+
+const labels = shapData.map(d => d.feature)
+const values = shapData.map(d => d.impact)
+
+const ctx = document.getElementById("shapChart")
+
+if(ctx){
+
+new Chart(ctx,{
+
+type:"bar",
+
+data:{
+labels:labels,
+datasets:[{
+label:"Feature Impact",
+data:values,
+backgroundColor:"#3b82f6"
+}]
+},
+
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{
+legend:{display:false}
+},
+scales:{
+y:{beginAtZero:true}
+}
+}
+
+})
+
+}
+
+}
+
+})
+
+</script>
+
+
+</body>
+</html>

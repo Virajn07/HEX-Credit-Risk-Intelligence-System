@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Customers</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<header class="header">
+
+<h1>HEX-Credit</h1>
+
+<nav>
+
+<a href="/">Dashboard</a>
+<a href="/applications">Applications</a>
+<a href="/customers">Customers</a>
+
+</nav>
+
+</header>
+
+<h2>Customer Portfolio</h2>
+
+
+<!-- ================= FILTERS ================= -->
+
+<div class="filters">
+
+<input type="text" id="customerSearch" placeholder="Search customer">
+
+<select id="relationFilter">
+
+<option value="All">Relationship</option>
+<option value="5">5+ Years</option>
+<option value="10">10+ Years</option>
+
+</select>
+
+<select id="loanFilter">
+
+<option value="All">Applications</option>
+<option value="2">2+ Loans</option>
+<option value="3">3+ Loans</option>
+
+</select>
+
+</div>
+
+
+<div class="table-box">
+
+<table id="customerTable">
+
+<thead>
+
+<tr>
+
+<th>Customer</th>
+<th>Credit Score</th>
+<th>Relationship</th>
+<th>Total Loans</th>
+<th>Total Exposure</th>
+<th>Profile</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for c in customers %}
+
+<tr>
+
+<td>{{c.name}}</td>
+<td>{{c.credit_score}}</td>
+<td>{{c.relationship_years}} yrs</td>
+<td>{{c.total_loans}}</td>
+<td>₹{{"{:,.0f}".format(c.total_exposure)}}</td>
+
+<td>
+
+<a href="/customer/{{c.customer_id}}" class="btn btn-analyze">
+Open Profile
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<script>
+
+const rows = document.querySelectorAll("#customerTable tbody tr")
+
+document.getElementById("customerSearch").addEventListener("keyup", filterCustomers)
+document.getElementById("relationFilter").addEventListener("change", filterCustomers)
+document.getElementById("loanFilter").addEventListener("change", filterCustomers)
+
+function filterCustomers(){
+
+const search = document.getElementById("customerSearch").value.toLowerCase()
+const relation = document.getElementById("relationFilter").value
+const loans = document.getElementById("loanFilter").value
+
+rows.forEach(row=>{
+
+const text = row.innerText.toLowerCase()
+
+const relYears = parseInt(row.cells[2].innerText)
+const loanCount = parseInt(row.cells[3].innerText)
+
+let show = true
+
+if(search && !text.includes(search)){
+show = false
+}
+
+if(relation !== "All" && relYears < relation){
+show = false
+}
+
+if(loans !== "All" && loanCount < loans){
+show = false
+}
+
+row.style.display = show ? "" : "none"
+
+})
+
+}
+
+</script>
+
+</body>
+</html>

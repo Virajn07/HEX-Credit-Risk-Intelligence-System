@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Customer Profile</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body data-credit-score="{{ customer.credit_score }}">
+
+<div class="container">
+
+<header class="header">
+
+<h1>HEX-Credit</h1>
+
+<nav>
+<a href="/">Dashboard</a>
+<a href="/applications">Applications</a>
+<a href="/customers">Customers</a>
+</nav>
+
+</header>
+
+<h2>Customer Profile</h2>
+
+
+<!-- CUSTOMER SUMMARY -->
+
+<div class="analysis-grid">
+
+<div class="panel">
+
+<h3>{{ customer.customer_name }}</h3>
+
+<p><b>CIBIL Score:</b> {{ customer.credit_score }}</p>
+
+<p><b>Relationship Years:</b> {{ customer.relationship_years }}</p>
+
+<p><b>Account Balance:</b> ₹{{ "{:,.0f}".format(customer.account_balance) }}</p>
+
+<p><b>Investment Value:</b> ₹{{ "{:,.0f}".format(customer.investment_value) }}</p>
+
+<p><b>Total Applications:</b> {{ loans|length }}</p>
+
+<p><b>Total Exposure:</b> ₹{{ "{:,.0f}".format(total_exposure) }}</p>
+
+</div>
+
+
+<div class="panel">
+
+<h3>CIBIL Credit Score</h3>
+
+<div style="height:260px;">
+<canvas id="creditScoreChart"></canvas>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- AI CUSTOMER REVIEW -->
+
+<div class="panel">
+
+<h3>AI Customer Portfolio Review</h3>
+
+<div class="ai-analysis">
+
+<ul>
+
+{% for line in ai_customer_review.split('\n') %}
+<li>{{ line.replace('**','') }}</li>
+{% endfor %}
+</ul>
+
+</div>
+
+</div>
+
+
+<!-- CUSTOMER LOANS -->
+<a href="/customer_report/{{ customer.customer_id }}" class="btn btn-analyze">
+Download Customer Report
+</a>
+<div class="panel">
+
+<h3>Customer Loan Applications</h3>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Loan ID</th>
+<th>Loan Amount</th>
+<th>Risk</th>
+<th>Probability</th>
+<th>Status</th>
+<th>Review</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for loan in loans %}
+
+<tr class="{{ loan.risk | lower }}">
+
+<td>{{ loan.loan_id }}</td>
+
+<td>₹{{ "{:,.0f}".format(loan.loan_amount) }}</td>
+
+<td class="{{ loan.risk | lower }}-text">{{ loan.risk }}</td>
+
+<td>{{ loan.probability }}%</td>
+
+<td>{{ loan.status }}</td>
+
+<td>
+<a href="/loan/{{ loan.loan_id }}" class="btn btn-analyze">
+Analyze
+</a>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>HEX-Credit Applications</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+<header class="header">
+
+<h1>HEX-Credit</h1>
+
+<nav>
+<a href="/">Dashboard</a>
+<a href="/applications">Applications</a>
+<a href="/customers">Customers</a>
+</nav>
+
+</header>
+
+
+<h2>Loan Applications</h2>
+
+
+<!-- ================= FILTERS ================= -->
+
+<div class="filters">
+
+<input
+type="text"
+id="searchInput"
+placeholder="Search customer..."
+onkeyup="searchLoans()"
+>
+
+<select id="riskFilter" onchange="filterRisk()">
+<option value="All">All Risk</option>
+<option value="low">Low</option>
+<option value="medium">Medium</option>
+<option value="high">High</option>
+</select>
+
+</div>
+
+
+<!-- ================= STATUS FILTER ================= -->
+
+<div class="filters">
+
+<button onclick="filterStatus('All')">All</button>
+
+<button onclick="filterStatus('Pending')">
+Pending
+</button>
+
+<button onclick="filterStatus('Approved')">
+Approved
+</button>
+
+<button onclick="filterStatus('On Hold')">
+On Hold
+</button>
+
+<button onclick="filterStatus('Rejected')">
+Rejected
+</button>
+
+</div>
+
+
+<!-- ================= TABLE ================= -->
+
+<div class="table-box">
+
+<table id="loanTable">
+
+<thead>
+
+<tr>
+
+<th onclick="sortTable(0)">ID</th>
+
+<th onclick="sortTable(1)">Customer</th>
+
+<th onclick="sortTable(2)">Loan</th>
+
+<th onclick="sortTable(3)">Income</th>
+
+<th onclick="sortTable(4)">Risk</th>
+
+<th onclick="sortTable(5)">Priority</th>
+
+<th onclick="sortTable(6)">Probability</th>
+
+<th>Status</th>
+
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{% for loan in loans %}
+
+<tr class="{{ loan.risk|lower }} {{ loan.status }}">
+
+<td>{{ loan.loan_id }}</td>
+
+<td>{{ loan.customer_name }}</td>
+
+<td>₹{{ "{:,.0f}".format(loan.loan_amount) }}</td>
+
+<td>₹{{ "{:,.0f}".format(loan.annual_income) }}</td>
+
+<td class="{{ loan.risk|lower }}-text">
+{{ loan.risk }}
+</td>
+
+<td>{{ loan.priority_score }}</td>
+
+<td>{{ loan.probability }}%</td>
+
+<td>
+
+{% if loan.status == "Approved" %}
+<span class="status status-approved">Approved</span>
+
+{% elif loan.status == "Rejected" %}
+<span class="status status-rejected">Rejected</span>
+
+{% elif loan.status == "On Hold" %}
+<span class="status status-hold">On Hold</span>
+
+{% else %}
+<span class="status status-pending">Pending</span>
+{% endif %}
+
+</td>
+
+<td>
+
+<a href="/loan/{{ loan.loan_id }}" class="btn btn-analyze">
+Analyze
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- ================= PAGINATION ================= -->
+
+<div class="pagination">
+
+<button onclick="prevPage()">Previous</button>
+
+<span id="pageInfo"></span>
+
+<button onclick="nextPage()">Next</button>
+
+</div>
+
+
+</div>
+
+
+<!-- ================= SCRIPT ================= -->
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+</html>

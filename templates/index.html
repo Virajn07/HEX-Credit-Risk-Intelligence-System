@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>HEX-Credit Dashboard</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+<header class="header">
+
+<h1>HEX-Credit</h1>
+
+<nav>
+<a href="/">Dashboard</a>
+<a href="/applications">Applications</a>
+<a href="/customers">Customers</a>
+</nav>
+
+</header>
+
+
+<!-- ================================================= -->
+<!-- SUMMARY CARDS -->
+<!-- ================================================= -->
+
+<div class="cards">
+
+<div class="card">
+<h3>Total Applications</h3>
+<div class="number">{{ total_loans }}</div>
+</div>
+
+<div class="card">
+<h3>High Risk</h3>
+<div class="number high-text">{{ high_risk }}</div>
+</div>
+
+<div class="card">
+<h3>Medium Risk</h3>
+<div class="number medium-text">{{ medium_risk }}</div>
+</div>
+
+<div class="card">
+<h3>Low Risk</h3>
+<div class="number low-text">{{ low_risk }}</div>
+</div>
+
+<div class="card portfolio-score">
+<h3>Portfolio Health</h3>
+<div class="number">{{ portfolio_health }}</div>
+<p>{{ portfolio_label }}</p>
+</div>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- CHART GRID -->
+<!-- ================================================= -->
+
+<div class="chart-grid">
+
+<div class="chart-card">
+
+<div class="chart-header">
+<h3>Portfolio Risk Distribution</h3>
+</div>
+
+<canvas id="riskChart"></canvas>
+
+</div>
+
+
+<div class="chart-card">
+
+<div class="chart-header">
+<h3>AI Risk Radar</h3>
+</div>
+
+<canvas id="riskRadar"></canvas>
+
+</div>
+
+
+<div class="chart-card">
+
+<div class="chart-header">
+<h3>Loan Amount Distribution</h3>
+</div>
+
+<canvas id="loanChart"></canvas>
+
+</div>
+
+
+<div class="chart-card">
+
+<div class="chart-header">
+<h3>CIBIL Score Distribution</h3>
+</div>
+
+<canvas id="creditChart"></canvas>
+
+</div>
+
+</div>
+
+
+
+<!-- ================================================= -->
+<!-- MAIN DASHBOARD GRID -->
+<!-- ================================================= -->
+
+<div class="dashboard-grid">
+
+<div class="dashboard-main">
+
+
+<!-- ================================================= -->
+<!-- PRIORITY CUSTOMERS -->
+<!-- ================================================= -->
+
+<div class="panel">
+
+<h3>Priority Customers</h3>
+
+<div class="risk-list">
+
+{% for customer in priority_customers %}
+
+<div class="risk-card">
+
+<strong>
+<a href="/customer/{{ customer.customer_id }}">
+{{ customer.customer_name }}
+</a>
+</strong>
+
+<p>Credit Score: {{ customer.credit_score }}</p>
+<p>Relationship: {{ customer.relationship_years }} yrs</p>
+
+<a href="/customer/{{ customer.customer_id }}" class="view-profile">
+View Profile
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+
+
+<!-- ================================================= -->
+<!-- EASY APPROVAL -->
+<!-- ================================================= -->
+
+<div class="panel">
+
+<h3>Easy to Approve Loans</h3>
+
+<div class="risk-list">
+
+{% for loan in easy_loans %}
+
+<div class="risk-card">
+
+<strong>{{ loan.customer_name }}</strong>
+
+<p>Loan ₹{{ "{:,.0f}".format(loan.loan_amount) }}</p>
+
+<p class="low-text">
+Risk {{ loan.probability }}%
+</p>
+
+<a href="/loan/{{ loan.loan_id }}" class="review-btn">
+Review
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+
+
+<!-- ================================================= -->
+<!-- RISKY PRIORITY LOANS -->
+<!-- ================================================= -->
+
+<div class="panel">
+
+<h3>Risky Loans from Priority Customers</h3>
+
+<div class="risk-list">
+
+{% for loan in priority_risky_loans %}
+
+<div class="risk-card">
+
+<strong>{{ loan.customer_name }}</strong>
+
+<p>Loan ₹{{ "{:,.0f}".format(loan.loan_amount) }}</p>
+
+<p class="high-text">
+Risk {{ loan.probability }}%
+</p>
+
+<a href="/loan/{{ loan.loan_id }}" class="btn btn-analyze">
+Analyze
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ================================================= -->
+<!-- AI ASSISTANT -->
+<!-- ================================================= -->
+
+<div class="dashboard-ai">
+
+<div class="panel">
+
+<h3>AI Credit Assistant</h3>
+
+
+<div class="preloaded-questions">
+
+<button onclick="askPreset('Which loans are safest to approve?')">
+Safest Loans
+</button>
+
+<button onclick="askPreset('Why are some loans classified as high risk?')">
+Why High Risk?
+</button>
+
+<button onclick="askPreset('Which customers should be prioritized for approval?')">
+Priority Customers
+</button>
+
+<button onclick="askPreset('Give portfolio summary')">
+Portfolio Summary
+</button>
+
+</div>
+
+
+<div id="chatBox" class="chat-box"></div>
+
+
+<div class="chat-input">
+
+<input type="text" id="chatInput" placeholder="Ask about portfolio...">
+
+<button onclick="sendChat()">Ask</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ================================================= -->
+<!-- SCRIPTS -->
+<!-- ================================================= -->
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded",function(){
+
+const riskData = {{ [low_risk, medium_risk, high_risk] | tojson }}
+
+renderRiskChart(
+riskData[0],
+riskData[1],
+riskData[2]
+)
+
+renderRiskRadar(
+riskData[2],
+riskData[1],
+riskData[0]
+)
+
+const clusterData = {{ cluster_data | tojson | safe }}
+
+renderLoanDistribution(clusterData)
+renderCreditDistribution(clusterData)
+
+})
+
+</script>
+
+
+</body>
+</html>
